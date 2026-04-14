@@ -1,0 +1,502 @@
+---
+import "../styles/global.css";
+import { sections } from "../data/categories";
+
+const sectionCatalogJson = JSON.stringify(
+	sections.map((section) => ({
+		id: section.id,
+		title: section.title
+	}))
+).replace(/</g, "\\u003c");
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Historial de Estudio</title>
+	</head>
+	<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+		<main class="mx-auto flex min-h-screen w-full max-w-5xl items-start px-6 py-10">
+			<section class="w-full rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/40 backdrop-blur">
+				<header class="mb-6 flex flex-wrap items-start justify-between gap-3">
+					<div>
+						<h1 class="text-2xl font-bold">Historial de Estudio</h1>
+						<p class="mt-2 text-sm text-slate-300">Registro local de resultados, avances y revisiones de tus quizzes.</p>
+					</div>
+					<div class="flex gap-2">
+						<a href="/big-quiz" class="rounded-lg border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/10">Big Quiz</a>
+						<a href="/" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Menu</a>
+					</div>
+				</header>
+
+				<div class="mb-6 grid gap-3 sm:grid-cols-3">
+					<div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+						<p class="text-xs text-slate-400">Almacenamiento</p>
+						<p id="storage-name" class="mt-1 text-sm font-semibold text-slate-100">-</p>
+						<p id="storage-size" class="mt-1 text-xs text-slate-300">-</p>
+					</div>
+					<div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+						<p class="text-xs text-slate-400">Big Quiz intentos</p>
+						<p id="bigquiz-count" class="mt-1 text-sm font-semibold text-slate-100">-</p>
+						<p id="bigquiz-best" class="mt-1 text-xs text-slate-300">-</p>
+					</div>
+					<div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+						<p class="text-xs text-slate-400">Secciones con avance</p>
+						<p id="sections-count" class="mt-1 text-sm font-semibold text-slate-100">-</p>
+						<p id="last-update" class="mt-1 text-xs text-slate-300">-</p>
+					</div>
+				</div>
+
+				<div class="mb-6 flex flex-wrap gap-2">
+					<button id="refresh-history" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Actualizar vista</button>
+					<button id="clear-history" class="rounded-lg border border-rose-500 px-3 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10">Borrar historial local</button>
+				</div>
+
+				<section class="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-4">
+					<h2 class="text-base font-semibold text-slate-100">Analitica de estudio</h2>
+					<p class="mt-1 text-xs text-slate-400">Rendimiento por seccion, preguntas mas falladas y tendencia semanal.</p>
+
+					<div class="mt-3 grid gap-3 lg:grid-cols-2">
+						<div class="rounded-lg border border-slate-800 bg-slate-950 p-3">
+							<h3 class="text-sm font-semibold text-slate-100">Porcentaje promedio por seccion</h3>
+							<div class="mt-2 overflow-x-auto">
+								<table class="min-w-full text-left text-sm">
+									<thead class="text-xs text-slate-400">
+										<tr>
+											<th class="pb-2 pr-4">Seccion</th>
+											<th class="pb-2 pr-4">Promedio</th>
+											<th class="pb-2 pr-4">Mejor</th>
+											<th class="pb-2 pr-4">Intentos</th>
+										</tr>
+									</thead>
+									<tbody id="section-analytics-body" class="text-slate-200"></tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="rounded-lg border border-slate-800 bg-slate-950 p-3">
+							<h3 class="text-sm font-semibold text-slate-100">Tendencia semanal</h3>
+							<div id="weekly-trend" class="mt-2 grid gap-2"></div>
+						</div>
+					</div>
+
+					<div class="mt-3 rounded-lg border border-slate-800 bg-slate-950 p-3">
+						<h3 class="text-sm font-semibold text-slate-100">Preguntas mas falladas</h3>
+						<div class="mt-2 overflow-x-auto">
+							<table class="min-w-full text-left text-sm">
+								<thead class="text-xs text-slate-400">
+									<tr>
+										<th class="pb-2 pr-4">#</th>
+										<th class="pb-2 pr-4">Seccion</th>
+										<th class="pb-2 pr-4">Pregunta</th>
+										<th class="pb-2 pr-4">Fallos</th>
+										<th class="pb-2 pr-4">Veces vista</th>
+										<th class="pb-2 pr-4">Error %</th>
+									</tr>
+								</thead>
+								<tbody id="most-failed-body" class="text-slate-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</section>
+
+				<section class="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-4">
+					<h2 class="text-base font-semibold text-slate-100">Historial Big Quiz</h2>
+					<div class="mt-3 overflow-x-auto">
+						<table class="min-w-full text-left text-sm">
+							<thead class="text-xs text-slate-400">
+								<tr>
+									<th class="pb-2 pr-4">Fecha</th>
+									<th class="pb-2 pr-4">Modo</th>
+									<th class="pb-2 pr-4">Resultado</th>
+									<th class="pb-2 pr-4">%</th>
+									<th class="pb-2 pr-4">Estatus</th>
+								</tr>
+							</thead>
+							<tbody id="bigquiz-attempts-body" class="text-slate-200"></tbody>
+						</table>
+					</div>
+				</section>
+
+				<section class="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-4">
+					<h2 class="text-base font-semibold text-slate-100">Revisiones guardadas (detalladas)</h2>
+					<div id="bigquiz-reviews" class="mt-3 grid gap-2"></div>
+				</section>
+
+				<section class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+					<h2 class="text-base font-semibold text-slate-100">Progreso por seccion</h2>
+					<div class="mt-3 overflow-x-auto">
+						<table class="min-w-full text-left text-sm">
+							<thead class="text-xs text-slate-400">
+								<tr>
+									<th class="pb-2 pr-4">Seccion</th>
+									<th class="pb-2 pr-4">Mejor</th>
+									<th class="pb-2 pr-4">Intentos</th>
+									<th class="pb-2 pr-4">Avance actual</th>
+									<th class="pb-2 pr-4">Ultimo uso</th>
+								</tr>
+							</thead>
+							<tbody id="sections-body" class="text-slate-200"></tbody>
+						</table>
+					</div>
+				</section>
+			</section>
+		</main>
+
+		<script id="section-catalog" type="application/json" set:html={sectionCatalogJson}></script>
+		<script>
+			import {
+				APP_STORAGE_NAME,
+				clearProgressStore,
+				getProgressSnapshot,
+				getStorageUsageBytes
+			} from "../lib/progress";
+
+			const sectionCatalog = JSON.parse(document.querySelector("#section-catalog")?.textContent ?? "[]");
+			const sectionCatalogMap = new Map(sectionCatalog.map((section) => [section.id, section.title]));
+
+			const storageNameEl = document.querySelector("#storage-name");
+			const storageSizeEl = document.querySelector("#storage-size");
+			const bigQuizCountEl = document.querySelector("#bigquiz-count");
+			const bigQuizBestEl = document.querySelector("#bigquiz-best");
+			const sectionsCountEl = document.querySelector("#sections-count");
+			const lastUpdateEl = document.querySelector("#last-update");
+			const bigQuizAttemptsBodyEl = document.querySelector("#bigquiz-attempts-body");
+			const bigQuizReviewsEl = document.querySelector("#bigquiz-reviews");
+			const sectionsBodyEl = document.querySelector("#sections-body");
+			const sectionAnalyticsBodyEl = document.querySelector("#section-analytics-body");
+			const mostFailedBodyEl = document.querySelector("#most-failed-body");
+			const weeklyTrendEl = document.querySelector("#weekly-trend");
+			const refreshBtn = document.querySelector("#refresh-history");
+			const clearBtn = document.querySelector("#clear-history");
+
+			function formatDate(value) {
+				if (!value) return "-";
+				const date = new Date(value);
+				if (Number.isNaN(date.getTime())) return "-";
+				return new Intl.DateTimeFormat("es-MX", {
+					year: "numeric",
+					month: "short",
+					day: "2-digit",
+					hour: "2-digit",
+					minute: "2-digit"
+				}).format(date);
+			}
+
+			function formatBytes(bytes) {
+				if (bytes < 1024) return `${bytes} B`;
+				if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+				return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+			}
+
+			function escapeHtml(value) {
+				return String(value)
+					.replaceAll("&", "&amp;")
+					.replaceAll("<", "&lt;")
+					.replaceAll(">", "&gt;")
+					.replaceAll('"', "&quot;")
+					.replaceAll("'", "&#039;");
+			}
+
+			function getSectionTitle(sectionId) {
+				return sectionCatalogMap.get(sectionId) ?? sectionId;
+			}
+
+			function splitPrompt(prompt) {
+				const matched = /^\[(.+?)\]\s*(.+)$/.exec(String(prompt));
+				if (!matched) {
+					return {
+						sectionTitle: "General",
+						questionText: String(prompt)
+					};
+				}
+				return {
+					sectionTitle: matched[1],
+					questionText: matched[2]
+				};
+			}
+
+			function getWeekStartIso(value) {
+				const date = new Date(value);
+				if (Number.isNaN(date.getTime())) return "";
+				const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+				const day = utcDate.getUTCDay();
+				const diffToMonday = day === 0 ? -6 : 1 - day;
+				utcDate.setUTCDate(utcDate.getUTCDate() + diffToMonday);
+				return utcDate.toISOString().slice(0, 10);
+			}
+
+			function formatWeekLabel(weekStartIso) {
+				const weekStartDate = new Date(`${weekStartIso}T12:00:00Z`);
+				const weekEndDate = new Date(weekStartDate);
+				weekEndDate.setUTCDate(weekEndDate.getUTCDate() + 6);
+				const formatter = new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" });
+				return `${formatter.format(weekStartDate)} - ${formatter.format(weekEndDate)}`;
+			}
+
+			function renderBigQuizAttempts(attempts) {
+				bigQuizAttemptsBodyEl.innerHTML = "";
+				if (!attempts || attempts.length === 0) {
+					bigQuizAttemptsBodyEl.innerHTML = '<tr><td class="py-2 text-slate-400" colspan="5">Sin intentos registrados.</td></tr>';
+					return;
+				}
+
+				attempts.forEach((attempt) => {
+					const modeLabel = attempt.mode === "intense" ? "Examen" : "Practica";
+					const statusLabel = attempt.passed ? "Aprobado" : "No aprobado";
+					const statusClass = attempt.passed ? "text-emerald-300" : "text-rose-300";
+					const row = document.createElement("tr");
+					row.innerHTML = `
+						<td class="py-2 pr-4">${formatDate(attempt.playedAt)}</td>
+						<td class="py-2 pr-4">${modeLabel}</td>
+						<td class="py-2 pr-4">${attempt.score}/${attempt.total}</td>
+						<td class="py-2 pr-4">${attempt.percentage}%</td>
+						<td class="py-2 pr-4 ${statusClass}">${statusLabel}</td>
+					`;
+					bigQuizAttemptsBodyEl.appendChild(row);
+				});
+			}
+
+			function renderBigQuizReviews(reviews) {
+				bigQuizReviewsEl.innerHTML = "";
+				if (!reviews || reviews.length === 0) {
+					bigQuizReviewsEl.innerHTML = '<p class="text-sm text-slate-400">Sin revisiones detalladas guardadas.</p>';
+					return;
+				}
+
+				reviews.forEach((review, index) => {
+					const wrapper = document.createElement("details");
+					wrapper.className = "rounded-lg border border-slate-800 bg-slate-950 p-3";
+					const modeLabel = review.mode === "intense" ? "Examen" : "Practica";
+					const attemptsHtml = review.attempts
+						.map((attempt, attemptIndex) => {
+							const color = attempt.isCorrect ? "text-emerald-300" : "text-rose-300";
+							return `
+								<div class="rounded-md border border-slate-800 p-2">
+									<p class="text-xs font-semibold ${color}">Pregunta ${attemptIndex + 1} - ${attempt.isCorrect ? "Correcta" : "Incorrecta"}</p>
+									<p class="mt-1 text-xs text-slate-200">${escapeHtml(attempt.prompt)}</p>
+									<p class="mt-1 text-[11px] text-slate-400">Tu respuesta: ${escapeHtml(attempt.selectedAnswer)}</p>
+									<p class="mt-1 text-[11px] text-slate-400">Correcta: ${escapeHtml(attempt.correctAnswer)}</p>
+								</div>
+							`;
+						})
+						.join("");
+
+					wrapper.innerHTML = `
+						<summary class="cursor-pointer text-sm font-semibold text-slate-100">
+							#${index + 1} ${modeLabel} - ${review.score}/${review.total} (${review.percentage}%) - ${formatDate(review.playedAt)}
+						</summary>
+						<div class="mt-3 grid gap-2">${attemptsHtml}</div>
+					`;
+					bigQuizReviewsEl.appendChild(wrapper);
+				});
+			}
+
+			function renderSections(sectionsById) {
+				sectionsBodyEl.innerHTML = "";
+				const entries = Object.entries(sectionsById || {}).sort(([, a], [, b]) => {
+					const aTime = new Date(a.lastPlayedAt || 0).getTime();
+					const bTime = new Date(b.lastPlayedAt || 0).getTime();
+					return bTime - aTime;
+				});
+
+				if (entries.length === 0) {
+					sectionsBodyEl.innerHTML = '<tr><td class="py-2 text-slate-400" colspan="5">Sin progreso de secciones.</td></tr>';
+					return;
+				}
+
+				entries.forEach(([sectionId, section]) => {
+					const row = document.createElement("tr");
+					row.innerHTML = `
+						<td class="py-2 pr-4">
+							${escapeHtml(getSectionTitle(sectionId))}
+							<span class="block text-[11px] text-slate-500">${escapeHtml(sectionId)}</span>
+						</td>
+						<td class="py-2 pr-4">${section.bestScore}/${section.total} (${section.bestPercentage}%)</td>
+						<td class="py-2 pr-4">${section.attempts.length}</td>
+						<td class="py-2 pr-4">${section.currentQuestion}/${section.total} ${section.completed ? "(completada)" : ""}</td>
+						<td class="py-2 pr-4">${formatDate(section.lastPlayedAt)}</td>
+					`;
+					sectionsBodyEl.appendChild(row);
+				});
+			}
+
+			function renderSectionAnalytics(sectionsById) {
+				sectionAnalyticsBodyEl.innerHTML = "";
+				const rows = Object.entries(sectionsById || {})
+					.map(([sectionId, section]) => {
+						const attempts = section.attempts ?? [];
+						const average =
+							attempts.length === 0
+								? 0
+								: Math.round(attempts.reduce((sum, attempt) => sum + (attempt.percentage ?? 0), 0) / attempts.length);
+						return {
+							sectionId,
+							title: getSectionTitle(sectionId),
+							average,
+							best: section.bestPercentage ?? 0,
+							attemptsCount: attempts.length
+						};
+					})
+					.sort((a, b) => b.average - a.average || b.best - a.best);
+
+				if (rows.length === 0) {
+					sectionAnalyticsBodyEl.innerHTML = '<tr><td class="py-2 text-slate-400" colspan="4">Sin datos suficientes.</td></tr>';
+					return;
+				}
+
+				rows.forEach((rowData) => {
+					const row = document.createElement("tr");
+					row.innerHTML = `
+						<td class="py-2 pr-4">${escapeHtml(rowData.title)}</td>
+						<td class="py-2 pr-4">${rowData.average}%</td>
+						<td class="py-2 pr-4">${rowData.best}%</td>
+						<td class="py-2 pr-4">${rowData.attemptsCount}</td>
+					`;
+					sectionAnalyticsBodyEl.appendChild(row);
+				});
+			}
+
+			function renderMostFailedQuestions(reviews) {
+				mostFailedBodyEl.innerHTML = "";
+				const stats = new Map();
+
+				(reviews ?? []).forEach((review) => {
+					(review.attempts ?? []).forEach((attempt) => {
+						if (!attempt?.prompt) return;
+						const key = attempt.prompt;
+						const current = stats.get(key) ?? { prompt: key, wrong: 0, seen: 0 };
+						current.seen += 1;
+						if (!attempt.isCorrect) current.wrong += 1;
+						stats.set(key, current);
+					});
+				});
+
+				const rows = Array.from(stats.values())
+					.filter((item) => item.wrong > 0)
+					.sort((a, b) => b.wrong - a.wrong || b.seen - a.seen)
+					.slice(0, 10);
+
+				if (rows.length === 0) {
+					mostFailedBodyEl.innerHTML = '<tr><td class="py-2 text-slate-400" colspan="6">Aun no hay errores registrados en revisiones.</td></tr>';
+					return;
+				}
+
+				rows.forEach((item, index) => {
+					const parsedPrompt = splitPrompt(item.prompt);
+					const errorPercentage = Math.round((item.wrong / item.seen) * 100);
+					const row = document.createElement("tr");
+					row.innerHTML = `
+						<td class="py-2 pr-4 text-slate-400">${index + 1}</td>
+						<td class="py-2 pr-4">${escapeHtml(parsedPrompt.sectionTitle)}</td>
+						<td class="py-2 pr-4">${escapeHtml(parsedPrompt.questionText)}</td>
+						<td class="py-2 pr-4 text-rose-300">${item.wrong}</td>
+						<td class="py-2 pr-4">${item.seen}</td>
+						<td class="py-2 pr-4">${errorPercentage}%</td>
+					`;
+					mostFailedBodyEl.appendChild(row);
+				});
+			}
+
+			function buildWeeklyTrend(snapshot) {
+				const buckets = new Map();
+
+				Object.values(snapshot.sections ?? {}).forEach((section) => {
+					(section.attempts ?? []).forEach((attempt) => {
+						const weekKey = getWeekStartIso(attempt.playedAt);
+						if (!weekKey) return;
+						const bucket = buckets.get(weekKey) ?? { weekStart: weekKey, attempts: 0, passed: 0, sum: 0 };
+						bucket.attempts += 1;
+						bucket.sum += attempt.percentage ?? 0;
+						if ((attempt.percentage ?? 0) >= 70) bucket.passed += 1;
+						buckets.set(weekKey, bucket);
+					});
+				});
+
+				(snapshot.bigQuiz?.attempts ?? []).forEach((attempt) => {
+					const weekKey = getWeekStartIso(attempt.playedAt);
+					if (!weekKey) return;
+					const bucket = buckets.get(weekKey) ?? { weekStart: weekKey, attempts: 0, passed: 0, sum: 0 };
+					bucket.attempts += 1;
+					bucket.sum += attempt.percentage ?? 0;
+					if (attempt.passed || (attempt.percentage ?? 0) >= 70) bucket.passed += 1;
+					buckets.set(weekKey, bucket);
+				});
+
+				return Array.from(buckets.values())
+					.map((bucket) => ({
+						weekStart: bucket.weekStart,
+						attempts: bucket.attempts,
+						averagePercentage: Math.round(bucket.sum / bucket.attempts),
+						passRate: Math.round((bucket.passed / bucket.attempts) * 100)
+					}))
+					.sort((a, b) => a.weekStart.localeCompare(b.weekStart))
+					.slice(-8);
+			}
+
+			function renderWeeklyTrend(snapshot) {
+				weeklyTrendEl.innerHTML = "";
+				const rows = buildWeeklyTrend(snapshot);
+
+				if (rows.length === 0) {
+					weeklyTrendEl.innerHTML = '<p class="text-sm text-slate-400">Sin suficientes intentos para mostrar tendencia.</p>';
+					return;
+				}
+
+				rows.forEach((rowData) => {
+					const wrapper = document.createElement("div");
+					wrapper.className = "rounded-md border border-slate-800 p-2";
+					const barWidth = Math.max(4, rowData.averagePercentage);
+					wrapper.innerHTML = `
+						<div class="flex items-center justify-between gap-2 text-xs text-slate-300">
+							<span>${formatWeekLabel(rowData.weekStart)}</span>
+							<span>${rowData.averagePercentage}% promedio</span>
+						</div>
+						<div class="mt-2 h-2 rounded-full bg-slate-800">
+							<div class="h-2 rounded-full bg-emerald-500" style="width: ${barWidth}%;"></div>
+						</div>
+						<p class="mt-2 text-[11px] text-slate-400">Intentos: ${rowData.attempts} | Aprobacion: ${rowData.passRate}%</p>
+					`;
+					weeklyTrendEl.appendChild(wrapper);
+				});
+			}
+
+			function render() {
+				const snapshot = getProgressSnapshot();
+				const bytes = getStorageUsageBytes();
+				const bestAttempt =
+					snapshot.bigQuiz.attempts.find((attempt) => attempt.score === snapshot.bigQuiz.bestScore) ??
+					snapshot.bigQuiz.attempts[0] ??
+					null;
+
+				storageNameEl.textContent = APP_STORAGE_NAME;
+				storageSizeEl.textContent = `Uso estimado: ${formatBytes(bytes)}`;
+				bigQuizCountEl.textContent = `${snapshot.bigQuiz.attempts.length} intentos`;
+				bigQuizBestEl.textContent = `Mejor: ${snapshot.bigQuiz.bestScore}/${bestAttempt?.total ?? "-"} (${snapshot.bigQuiz.bestPercentage}%)`;
+				sectionsCountEl.textContent = `${Object.keys(snapshot.sections).length} secciones`;
+				lastUpdateEl.textContent = `Actualizado: ${formatDate(snapshot.updatedAt)}`;
+
+				renderSectionAnalytics(snapshot.sections);
+				renderMostFailedQuestions(snapshot.bigQuiz.reviews);
+				renderWeeklyTrend(snapshot);
+				renderBigQuizAttempts(snapshot.bigQuiz.attempts);
+				renderBigQuizReviews(snapshot.bigQuiz.reviews);
+				renderSections(snapshot.sections);
+			}
+
+			refreshBtn.addEventListener("click", render);
+			clearBtn.addEventListener("click", () => {
+				const accepted = window.confirm("¿Seguro que quieres borrar todo el historial local? Esta accion no se puede deshacer.");
+				if (!accepted) return;
+				clearProgressStore();
+				render();
+			});
+
+			render();
+		</script>
+	</body>
+</html>

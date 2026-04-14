@@ -31,30 +31,62 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 						<h1 class="text-2xl font-bold">Big Quiz Aleatorio</h1>
 						<p class="mt-1 text-sm text-slate-300">{BIG_QUIZ_SIZE} preguntas al azar de todo el banco.</p>
 					</div>
-					<a href="/" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Volver al menu</a>
+					<div class="flex gap-2">
+						<a href="/historial" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Historial</a>
+						<a href="/" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Volver al menu</a>
+					</div>
 				</header>
 
-				<p id="section-status" class="text-sm font-medium text-emerald-300"></p>
-				<div class="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-5">
-					<h2 id="question" class="text-lg font-semibold text-slate-100"></h2>
-					<div id="choices" class="mt-4 grid gap-2"></div>
-					<p id="feedback" class="mt-3 min-h-6 text-sm font-medium"></p>
-				</div>
+				<div id="mode-selector" class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+					<h2 class="text-lg font-semibold text-slate-100">Elige modo de Big Quiz</h2>
+					<p class="mt-2 text-sm text-slate-300">Ambos modos cierran con resultado final y revision de respuestas.</p>
+						<div class="mt-4 grid gap-3 sm:grid-cols-2">
+							<button id="start-practice" class="rounded-lg border border-emerald-500 px-4 py-3 text-left text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/10">
+								Modo quiz de practica
+								<span class="mt-1 block text-xs font-normal text-emerald-100/90">Sin tiempo, con feedback por pregunta y revision final</span>
+							</button>
+							<button id="start-intense" class="rounded-lg border border-sky-500 px-4 py-3 text-left text-sm font-semibold text-sky-200 transition hover:bg-sky-500/10">
+								Modo examen intenso
+								<span class="mt-1 block text-xs font-normal text-sky-100/90">30:00 totales para toda la ronda y revision al final</span>
+							</button>
+								<button id="resume-session" class="hidden rounded-lg border border-amber-500 px-4 py-3 text-left text-sm font-semibold text-amber-200 transition hover:bg-amber-500/10 sm:col-span-2">
+									Continuar sesion guardada
+									<span id="resume-session-text" class="mt-1 block text-xs font-normal text-amber-100/90"></span>
+								</button>
+								<button id="clear-session" class="hidden rounded-lg border border-rose-500 px-4 py-3 text-left text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10 sm:col-span-2">
+									Borrar sesion guardada
+									<span class="mt-1 block text-xs font-normal text-rose-100/90">Elimina el avance pendiente y conserva tu historial.</span>
+								</button>
+							</div>
+						</div>
 
-				<div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4">
-					<p class="text-sm text-slate-300">Aciertos: <span id="score" class="font-semibold text-slate-100">0</span></p>
-					<div class="flex gap-2">
-						<button id="next" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500" disabled>Siguiente</button>
-						<button id="restart" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Nueva ronda aleatoria</button>
-					</div>
-				</div>
+				<div id="quiz-shell" class="hidden">
+					<p id="mode-badge" class="text-sm font-medium text-emerald-300"></p>
+					<p id="section-status" class="mt-1 text-sm font-medium text-emerald-300"></p>
+					<p id="timer-status" class="mt-1 hidden text-sm font-semibold text-sky-300">Tiempo total: <span id="timer-value">30:00</span></p>
+					<p id="bigquiz-meta" class="mt-1 text-xs text-slate-400"></p>
 
-				<div id="summary-panel" class="mt-6 hidden rounded-xl border border-slate-800 bg-slate-900 p-5">
-					<div class="flex flex-wrap items-center justify-between gap-2">
-						<h3 class="text-base font-semibold text-slate-100">Resumen de la ronda</h3>
-						<p id="summary-meta" class="text-xs text-slate-400"></p>
+					<div class="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-5">
+						<h2 id="question" class="text-lg font-semibold text-slate-100"></h2>
+						<div id="choices" class="mt-4 grid gap-2"></div>
+						<p id="feedback" class="mt-3 min-h-6 text-sm font-medium"></p>
 					</div>
-					<div id="summary-list" class="mt-4 grid gap-2"></div>
+
+					<div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4">
+						<p class="text-sm text-slate-300">Aciertos: <span id="score" class="font-semibold text-slate-100">0</span></p>
+						<div class="flex gap-2">
+							<button id="next" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500" disabled>Siguiente</button>
+							<button id="restart" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">Nueva ronda</button>
+						</div>
+					</div>
+
+					<div id="summary-panel" class="mt-6 hidden rounded-xl border border-slate-800 bg-slate-900 p-5">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<h3 class="text-base font-semibold text-slate-100">Resumen de la ronda</h3>
+							<p id="summary-meta" class="text-xs text-slate-400"></p>
+						</div>
+						<div id="summary-list" class="mt-4 grid gap-2"></div>
+					</div>
 				</div>
 			</section>
 		</main>
@@ -62,20 +94,47 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 		<div id="big-quiz-config" data-size={BIG_QUIZ_SIZE} hidden></div>
 		<script id="all-questions" type="application/json" set:html={allQuestionsJson}></script>
 		<script>
+			import confetti from "canvas-confetti";
+			import {
+				getBigQuizProgress,
+				recordBigQuizAttempt,
+				saveBigQuizSession
+			} from "../lib/progress";
+
 			const allQuestions = JSON.parse(document.querySelector("#all-questions")?.textContent ?? "[]");
 			const size = Number.parseInt(document.querySelector("#big-quiz-config")?.dataset.size ?? "40", 10);
 			const OPTION_COUNT = 4;
-			const BIG_QUIZ_HISTORY_KEY = "cosmetologia.big_quiz.last_result";
+			const PASSING_PERCENTAGE = 70;
+			const EXAM_DURATION_SECONDS = 30 * 60;
+			const BIG_QUIZ_HISTORY_KEY = "dermasprint.big_quiz.last_result";
 
 			const state = {
+				mode: null,
 				questions: [],
 				currentQuestion: 0,
 				score: 0,
 				answered: false,
-				attempts: []
+				attempts: [],
+				finished: false,
+				justResumed: false,
+				startedAt: "",
+				remainingExamSeconds: EXAM_DURATION_SECONDS,
+				examTimerId: null,
+				timeExpired: false
 			};
 
+			const modeSelectorEl = document.querySelector("#mode-selector");
+			const quizShellEl = document.querySelector("#quiz-shell");
+			const startPracticeBtn = document.querySelector("#start-practice");
+			const startIntenseBtn = document.querySelector("#start-intense");
+			const resumeSessionBtn = document.querySelector("#resume-session");
+			const resumeSessionTextEl = document.querySelector("#resume-session-text");
+			const clearSessionBtn = document.querySelector("#clear-session");
+			const modeBadgeEl = document.querySelector("#mode-badge");
 			const statusEl = document.querySelector("#section-status");
+			const timerStatusEl = document.querySelector("#timer-status");
+			const timerValueEl = document.querySelector("#timer-value");
+			const metaEl = document.querySelector("#bigquiz-meta");
 			const questionEl = document.querySelector("#question");
 			const choicesEl = document.querySelector("#choices");
 			const feedbackEl = document.querySelector("#feedback");
@@ -97,6 +156,64 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 
 			function normalize(value) {
 				return String(value).trim().toLowerCase();
+			}
+
+			function showModeSelector() {
+				modeSelectorEl.classList.remove("hidden");
+				quizShellEl.classList.add("hidden");
+			}
+
+			function showQuizShell() {
+				modeSelectorEl.classList.add("hidden");
+				quizShellEl.classList.remove("hidden");
+			}
+
+			function updateModeBadge() {
+				const isIntense = state.mode === "intense";
+				modeBadgeEl.textContent = isIntense ? "Modo examen intenso" : "Modo quiz de practica";
+				if (isIntense) {
+					timerStatusEl.classList.remove("hidden");
+				} else {
+					timerStatusEl.classList.add("hidden");
+				}
+			}
+
+			function updateMeta() {
+				const progress = getBigQuizProgress();
+				if (!progress || progress.attempts.length === 0) {
+					metaEl.textContent = "Sin intentos guardados del Big Quiz.";
+					return;
+				}
+				metaEl.textContent = `Mejor global: ${progress.bestScore}/${size} (${progress.bestPercentage}%). Intentos: ${progress.attempts.length}`;
+			}
+
+			function normalizeSavedMode(savedMode) {
+				if (savedMode === "intense" || savedMode === "timer") return "intense";
+				return "practice";
+			}
+
+			function hasResumableSession(session) {
+				return Boolean(
+					session &&
+						session.currentQuestion >= 0 &&
+						session.currentQuestion < session.questions.length &&
+						session.questions.length > 0
+				);
+			}
+
+			function persistSession(nextQuestionIndex = state.currentQuestion) {
+				if (!state.mode || state.questions.length === 0) return;
+				saveBigQuizSession({
+					mode: state.mode,
+					timeLimitSeconds: EXAM_DURATION_SECONDS,
+					remainingSeconds: state.remainingExamSeconds,
+					questions: state.questions,
+					currentQuestion: nextQuestionIndex,
+					score: state.score,
+					attempts: state.attempts,
+					startedAt: state.startedAt,
+					updatedAt: new Date().toISOString()
+				});
 			}
 
 			function buildChoiceQuestions(baseQuestions, answerPool) {
@@ -157,6 +274,7 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 			function persistSummary() {
 				const payload = {
 					savedAt: new Date().toISOString(),
+					mode: state.mode,
 					score: state.score,
 					total: state.attempts.length,
 					attempts: state.attempts
@@ -168,17 +286,130 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				}
 			}
 
+			function calculatePercentage() {
+				if (state.questions.length === 0) return 0;
+				return Math.round((state.score / state.questions.length) * 100);
+			}
+
+			function launchPassingConfetti() {
+				const motionReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+				if (motionReduced) return;
+
+				confetti({
+					particleCount: 140,
+					spread: 80,
+					origin: { y: 0.65 }
+				});
+
+				setTimeout(() => {
+					confetti({
+						particleCount: 120,
+						spread: 100,
+						origin: { y: 0.7 }
+					});
+				}, 250);
+			}
+
+			function formatSeconds(totalSeconds) {
+				const safe = Math.max(0, totalSeconds);
+				const minutes = Math.floor(safe / 60);
+				const seconds = safe % 60;
+				return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+			}
+
+			function clearExamTimer() {
+				if (state.examTimerId !== null) {
+					window.clearInterval(state.examTimerId);
+					state.examTimerId = null;
+				}
+			}
+
+			function updateExamTimerUi() {
+				if (state.mode !== "intense") return;
+				timerValueEl.textContent = formatSeconds(state.remainingExamSeconds);
+				if (state.remainingExamSeconds <= 300) {
+					timerStatusEl.className = "mt-1 text-sm font-semibold text-rose-300";
+				} else {
+					timerStatusEl.className = "mt-1 text-sm font-semibold text-sky-300";
+				}
+			}
+
+			function finalizeByTimeExpired() {
+				if (state.finished) return;
+				state.timeExpired = true;
+				clearExamTimer();
+				for (let index = state.currentQuestion; index < state.questions.length; index += 1) {
+					if (state.attempts[index]) continue;
+					const question = state.questions[index];
+					state.attempts[index] = {
+						prompt: question.prompt,
+						selectedAnswer:
+							index === state.currentQuestion
+								? "Sin respuesta (tiempo agotado)"
+								: "Sin respuesta",
+						correctAnswer: question.answer,
+						isCorrect: false
+					};
+				}
+				state.currentQuestion = state.questions.length;
+				renderFinished();
+			}
+
+			function startExamTimer() {
+				clearExamTimer();
+				if (state.mode !== "intense") return;
+				updateExamTimerUi();
+				state.examTimerId = window.setInterval(() => {
+					if (state.finished) {
+						clearExamTimer();
+						return;
+					}
+					state.remainingExamSeconds = Math.max(0, state.remainingExamSeconds - 1);
+					updateExamTimerUi();
+					if (state.remainingExamSeconds % 5 === 0) {
+						persistSession();
+					}
+					if (state.remainingExamSeconds === 0) {
+						finalizeByTimeExpired();
+					}
+				}, 1000);
+			}
+
 			function renderFinished() {
+				clearExamTimer();
 				statusEl.textContent = "Big Quiz completado";
 				questionEl.textContent = "Terminaste la ronda";
 				choicesEl.innerHTML = "";
-				feedbackEl.textContent = `Aciertos: ${state.score} de ${state.questions.length}.`;
-				feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-emerald-300";
+				const percentage = calculatePercentage();
+				const isPassing = percentage >= PASSING_PERCENTAGE;
+				const base = isPassing
+					? `Aciertos: ${state.score} de ${state.questions.length} (${percentage}%). Aprobado.`
+					: `Aciertos: ${state.score} de ${state.questions.length} (${percentage}%). No aprobatorio.`;
+				feedbackEl.textContent = state.timeExpired ? `${base} Tiempo agotado.` : base;
+				feedbackEl.className = isPassing
+					? "mt-3 min-h-6 text-sm font-medium text-emerald-300"
+					: "mt-3 min-h-6 text-sm font-medium text-rose-300";
 				nextBtn.disabled = true;
 				nextBtn.textContent = "Sin mas preguntas";
 				scoreEl.textContent = String(state.score);
 				renderSummary();
 				persistSummary();
+
+					if (!state.finished) {
+						recordBigQuizAttempt({
+							score: state.score,
+							total: state.questions.length,
+							passed: isPassing,
+							mode: state.mode ?? "practice",
+							attempts: state.attempts
+						});
+						saveBigQuizSession(null);
+					updateMeta();
+					if (isPassing) {
+						launchPassingConfetti();
+					}
+				}
+				state.finished = true;
 			}
 
 			function renderQuestion() {
@@ -191,11 +422,18 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				state.answered = false;
 				statusEl.textContent = `Pregunta ${state.currentQuestion + 1} de ${state.questions.length}`;
 				questionEl.textContent = question.prompt;
-				feedbackEl.textContent = "";
-				feedbackEl.className = "mt-3 min-h-6 text-sm font-medium";
+				if (state.justResumed) {
+					feedbackEl.textContent = "Ronda recuperada desde tu ultimo avance guardado.";
+					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-sky-300";
+					state.justResumed = false;
+				} else {
+					feedbackEl.textContent = "";
+					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium";
+				}
 				nextBtn.disabled = true;
 				nextBtn.textContent = "Siguiente";
 				scoreEl.textContent = String(state.score);
+				persistSession();
 
 				choicesEl.innerHTML = "";
 				question.options.forEach((option, index) => {
@@ -203,13 +441,13 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 					button.type = "button";
 					button.textContent = option;
 					button.className = "w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left text-sm font-medium text-slate-100 transition hover:border-emerald-400 hover:bg-slate-700";
-					button.addEventListener("click", () => selectOption(index));
+					button.addEventListener("click", () => finalizeAnswer(index));
 					choicesEl.appendChild(button);
 				});
 			}
 
-			function selectOption(selectedIndex) {
-				if (state.answered) return;
+			function finalizeAnswer(selectedIndex) {
+				if (state.answered || state.finished) return;
 				state.answered = true;
 
 				const question = state.questions[state.currentQuestion];
@@ -218,11 +456,19 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 
 				if (isCorrect) {
 					state.score += 1;
-					feedbackEl.textContent = "Respuesta correcta.";
-					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-emerald-300";
+				}
+
+				if (state.mode === "practice") {
+					if (isCorrect) {
+						feedbackEl.textContent = "Respuesta correcta.";
+						feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-emerald-300";
+					} else {
+						feedbackEl.textContent = `Incorrecta. Correcta: ${question.answer}`;
+						feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-rose-300";
+					}
 				} else {
-					feedbackEl.textContent = `Incorrecta. Correcta: ${question.answer}`;
-					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-rose-300";
+					feedbackEl.textContent = "Respuesta registrada.";
+					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-sky-300";
 				}
 
 				state.attempts[state.currentQuestion] = {
@@ -234,10 +480,16 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 
 				buttons.forEach((button, index) => {
 					button.disabled = true;
-					if (index === question.correctIndex) {
-						button.className = "w-full rounded-lg border border-emerald-500 bg-emerald-500/15 px-4 py-3 text-left text-sm font-medium text-emerald-200";
+					if (state.mode === "practice") {
+						if (index === question.correctIndex) {
+							button.className = "w-full rounded-lg border border-emerald-500 bg-emerald-500/15 px-4 py-3 text-left text-sm font-medium text-emerald-200";
+						} else if (index === selectedIndex) {
+							button.className = "w-full rounded-lg border border-rose-500 bg-rose-500/15 px-4 py-3 text-left text-sm font-medium text-rose-200";
+						} else {
+							button.className = "w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left text-sm font-medium text-slate-400";
+						}
 					} else if (index === selectedIndex) {
-						button.className = "w-full rounded-lg border border-rose-500 bg-rose-500/15 px-4 py-3 text-left text-sm font-medium text-rose-200";
+						button.className = "w-full rounded-lg border border-sky-500 bg-sky-500/15 px-4 py-3 text-left text-sm font-medium text-sky-200";
 					} else {
 						button.className = "w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left text-sm font-medium text-slate-400";
 					}
@@ -245,26 +497,91 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 
 				nextBtn.disabled = false;
 				scoreEl.textContent = String(state.score);
+				const nextIndex = Math.min(state.currentQuestion + 1, state.questions.length);
+				persistSession(nextIndex);
 			}
 
-			function startRound() {
+			function startRound(forceNew = false, chosenMode = null) {
+				clearExamTimer();
+				const savedProgress = getBigQuizProgress();
+				const savedSession = savedProgress?.session;
+
+				const canResume = !forceNew && hasResumableSession(savedSession);
+
+				if (canResume && savedSession) {
+					state.mode = normalizeSavedMode(savedSession.mode);
+					state.questions = savedSession.questions;
+					state.currentQuestion = savedSession.currentQuestion;
+					state.score = savedSession.score;
+					state.attempts = savedSession.attempts ?? [];
+					state.finished = false;
+					state.justResumed = true;
+					state.startedAt = savedSession.startedAt ?? new Date().toISOString();
+					state.timeExpired = false;
+					state.remainingExamSeconds =
+						typeof savedSession.remainingSeconds === "number"
+							? savedSession.remainingSeconds
+							: EXAM_DURATION_SECONDS;
+					hideSummary();
+					showQuizShell();
+					updateModeBadge();
+					updateExamTimerUi();
+					renderQuestion();
+					updateMeta();
+					startExamTimer();
+					return;
+				}
+
+				const mode = chosenMode ?? state.mode ?? "practice";
+				state.mode = mode;
 				const randomQuestions = shuffle(allQuestions).slice(0, Math.min(size, allQuestions.length));
 				state.questions = buildChoiceQuestions(randomQuestions, allQuestions.map((question) => question.answer));
 				state.currentQuestion = 0;
 				state.score = 0;
 				state.attempts = [];
+				state.finished = false;
+				state.justResumed = false;
+				state.startedAt = new Date().toISOString();
+				state.timeExpired = false;
+				state.remainingExamSeconds = EXAM_DURATION_SECONDS;
 				hideSummary();
+				showQuizShell();
+				updateModeBadge();
+				updateExamTimerUi();
 				renderQuestion();
+				updateMeta();
+				startExamTimer();
 			}
+
+			startPracticeBtn.addEventListener("click", () => startRound(true, "practice"));
+			startIntenseBtn.addEventListener("click", () => startRound(true, "intense"));
+			resumeSessionBtn.addEventListener("click", () => startRound(false));
+			clearSessionBtn.addEventListener("click", () => {
+				saveBigQuizSession(null);
+				resumeSessionBtn.classList.add("hidden");
+				clearSessionBtn.classList.add("hidden");
+				resumeSessionTextEl.textContent = "";
+			});
 
 			nextBtn.addEventListener("click", () => {
 				state.currentQuestion += 1;
 				renderQuestion();
 			});
 
-			restartBtn.addEventListener("click", startRound);
+			restartBtn.addEventListener("click", () => startRound(true, state.mode ?? "practice"));
 
-			startRound();
+			showModeSelector();
+			updateMeta();
+
+			const saved = getBigQuizProgress();
+			if (hasResumableSession(saved.session)) {
+				const modeLabel = normalizeSavedMode(saved.session.mode) === "intense"
+					? "Examen intenso"
+					: "Quiz de practica";
+				resumeSessionTextEl.textContent = `Modo: ${modeLabel} | Pregunta ${saved.session.currentQuestion + 1} de ${saved.session.questions.length}`;
+				resumeSessionBtn.classList.remove("hidden");
+				clearSessionBtn.classList.remove("hidden");
+			}
 		</script>
 	</body>
 </html>
