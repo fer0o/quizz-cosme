@@ -1,7 +1,7 @@
 export const APP_STORAGE_NAME = "DermaSprint Progress";
 export const STORAGE_KEY = "dermasprint.progress.v1";
 const MAX_HISTORY = 20;
-const MAX_BIG_QUIZ_REVIEWS = 5;
+const MAX_BIG_QUIZ_REVIEWS = 20;
 
 export type AttemptSummary = {
 	playedAt: string;
@@ -9,7 +9,7 @@ export type AttemptSummary = {
 	total: number;
 	percentage: number;
 	passed?: boolean;
-	mode?: "practice" | "intense" | "smart";
+	mode?: "practice" | "intense" | "super-intense" | "smart";
 };
 
 export type SectionProgress = {
@@ -38,7 +38,7 @@ export type BigQuizSessionQuestion = {
 };
 
 export type BigQuizSession = {
-	mode: "practice" | "intense" | "smart";
+	mode: "practice" | "intense" | "super-intense" | "smart";
 	timeLimitSeconds: number;
 	remainingSeconds: number;
 	questions: BigQuizSessionQuestion[];
@@ -51,7 +51,7 @@ export type BigQuizSession = {
 
 export type BigQuizReview = {
 	playedAt: string;
-	mode: "practice" | "intense" | "smart";
+	mode: "practice" | "intense" | "super-intense" | "smart";
 	score: number;
 	total: number;
 	percentage: number;
@@ -251,7 +251,7 @@ export function recordBigQuizAttempt(payload: {
 	score: number;
 	total: number;
 	passed: boolean;
-	mode: "practice" | "intense" | "smart";
+	mode: "practice" | "intense" | "super-intense" | "smart";
 	attempts?: BigQuizAttemptDetail[];
 }): void {
 	const store = loadStore();
