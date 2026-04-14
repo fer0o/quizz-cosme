@@ -37,18 +37,22 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 					</div>
 				</header>
 
-				<div id="mode-selector" class="rounded-xl border border-slate-800 bg-slate-900 p-5">
-					<h2 class="text-lg font-semibold text-slate-100">Elige modo de Big Quiz</h2>
-					<p class="mt-2 text-sm text-slate-300">Ambos modos cierran con resultado final y revision de respuestas.</p>
-						<div class="mt-4 grid gap-3 sm:grid-cols-2">
-							<button id="start-practice" class="rounded-lg border border-emerald-500 px-4 py-3 text-left text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/10">
-								Modo quiz de practica
-								<span class="mt-1 block text-xs font-normal text-emerald-100/90">Sin tiempo, con feedback por pregunta y revision final</span>
-							</button>
-							<button id="start-intense" class="rounded-lg border border-sky-500 px-4 py-3 text-left text-sm font-semibold text-sky-200 transition hover:bg-sky-500/10">
-								Modo examen intenso
-								<span class="mt-1 block text-xs font-normal text-sky-100/90">30:00 totales para toda la ronda y revision al final</span>
-							</button>
+					<div id="mode-selector" class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+						<h2 class="text-lg font-semibold text-slate-100">Elige modo de Big Quiz</h2>
+						<p class="mt-2 text-sm text-slate-300">Todos los modos cierran con resultado final y revision de respuestas.</p>
+							<div class="mt-4 grid gap-3 sm:grid-cols-3">
+								<button id="start-practice" class="rounded-lg border border-emerald-500 px-4 py-3 text-left text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/10">
+									Modo quiz de practica
+									<span class="mt-1 block text-xs font-normal text-emerald-100/90">Sin tiempo, con feedback por pregunta y revision final</span>
+								</button>
+								<button id="start-smart" class="rounded-lg border border-amber-500 px-4 py-3 text-left text-sm font-semibold text-amber-200 transition hover:bg-amber-500/10">
+									Repaso inteligente
+									<span class="mt-1 block text-xs font-normal text-amber-100/90">Solo preguntas que fallaste recientemente, sin tiempo</span>
+								</button>
+								<button id="start-intense" class="rounded-lg border border-sky-500 px-4 py-3 text-left text-sm font-semibold text-sky-200 transition hover:bg-sky-500/10">
+									Modo examen intenso
+									<span class="mt-1 block text-xs font-normal text-sky-100/90">30:00 totales para toda la ronda y revision al final</span>
+								</button>
 								<button id="resume-session" class="hidden rounded-lg border border-amber-500 px-4 py-3 text-left text-sm font-semibold text-amber-200 transition hover:bg-amber-500/10 sm:col-span-2">
 									Continuar sesion guardada
 									<span id="resume-session-text" class="mt-1 block text-xs font-normal text-amber-100/90"></span>
@@ -93,20 +97,24 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 
 		<div id="big-quiz-config" data-size={BIG_QUIZ_SIZE} hidden></div>
 		<script id="all-questions" type="application/json" set:html={allQuestionsJson}></script>
-		<script>
-			import confetti from "canvas-confetti";
-			import {
-				getBigQuizProgress,
-				recordBigQuizAttempt,
-				saveBigQuizSession
+			<script>
+				import confetti from "canvas-confetti";
+				import Swal from "sweetalert2";
+				import {
+					getBigQuizProgress,
+					recordBigQuizAttempt,
+					saveBigQuizSession
 			} from "../lib/progress";
 
 			const allQuestions = JSON.parse(document.querySelector("#all-questions")?.textContent ?? "[]");
 			const size = Number.parseInt(document.querySelector("#big-quiz-config")?.dataset.size ?? "40", 10);
-			const OPTION_COUNT = 4;
-			const PASSING_PERCENTAGE = 70;
-			const EXAM_DURATION_SECONDS = 30 * 60;
-			const BIG_QUIZ_HISTORY_KEY = "dermasprint.big_quiz.last_result";
+				const OPTION_COUNT = 4;
+				const PASSING_PERCENTAGE = 70;
+				const EXAM_DURATION_SECONDS = 30 * 60;
+				const SMART_REVIEW_WINDOW = 3;
+				const BIG_QUIZ_HISTORY_KEY = "dermasprint.big_quiz.last_result";
+				const allAnswers = allQuestions.map((question) => question.answer);
+				const questionByPrompt = new Map(allQuestions.map((question) => [question.prompt, question]));
 
 			const state = {
 				mode: null,
@@ -123,10 +131,11 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				timeExpired: false
 			};
 
-			const modeSelectorEl = document.querySelector("#mode-selector");
-			const quizShellEl = document.querySelector("#quiz-shell");
-			const startPracticeBtn = document.querySelector("#start-practice");
-			const startIntenseBtn = document.querySelector("#start-intense");
+				const modeSelectorEl = document.querySelector("#mode-selector");
+				const quizShellEl = document.querySelector("#quiz-shell");
+				const startPracticeBtn = document.querySelector("#start-practice");
+				const startSmartBtn = document.querySelector("#start-smart");
+				const startIntenseBtn = document.querySelector("#start-intense");
 			const resumeSessionBtn = document.querySelector("#resume-session");
 			const resumeSessionTextEl = document.querySelector("#resume-session-text");
 			const clearSessionBtn = document.querySelector("#clear-session");
@@ -154,9 +163,15 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				return copy;
 			}
 
-			function normalize(value) {
-				return String(value).trim().toLowerCase();
-			}
+				function normalize(value) {
+					return String(value).trim().toLowerCase();
+				}
+
+				function getModeLabel(mode) {
+					if (mode === "intense") return "Modo examen intenso";
+					if (mode === "smart") return "Repaso inteligente";
+					return "Modo quiz de practica";
+				}
 
 			function showModeSelector() {
 				modeSelectorEl.classList.remove("hidden");
@@ -168,29 +183,41 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				quizShellEl.classList.remove("hidden");
 			}
 
-			function updateModeBadge() {
-				const isIntense = state.mode === "intense";
-				modeBadgeEl.textContent = isIntense ? "Modo examen intenso" : "Modo quiz de practica";
-				if (isIntense) {
-					timerStatusEl.classList.remove("hidden");
-				} else {
-					timerStatusEl.classList.add("hidden");
+				function updateModeBadge() {
+					const isIntense = state.mode === "intense";
+					modeBadgeEl.textContent = getModeLabel(state.mode);
+					if (state.mode === "smart") {
+						modeBadgeEl.className = "text-sm font-medium text-amber-300";
+					} else if (isIntense) {
+						modeBadgeEl.className = "text-sm font-medium text-sky-300";
+					} else {
+						modeBadgeEl.className = "text-sm font-medium text-emerald-300";
+					}
+					if (isIntense) {
+						timerStatusEl.classList.remove("hidden");
+					} else {
+						timerStatusEl.classList.add("hidden");
+					}
 				}
-			}
 
-			function updateMeta() {
-				const progress = getBigQuizProgress();
-				if (!progress || progress.attempts.length === 0) {
-					metaEl.textContent = "Sin intentos guardados del Big Quiz.";
-					return;
+				function updateMeta() {
+					const progress = getBigQuizProgress();
+					if (!progress || progress.attempts.length === 0) {
+						metaEl.textContent = "Sin intentos guardados del Big Quiz.";
+						return;
+					}
+					const bestAttempt =
+						progress.attempts.find((attempt) => attempt.score === progress.bestScore) ??
+						progress.attempts[0] ??
+						null;
+					metaEl.textContent = `Mejor global: ${progress.bestScore}/${bestAttempt?.total ?? "-"} (${progress.bestPercentage}%). Intentos: ${progress.attempts.length}`;
 				}
-				metaEl.textContent = `Mejor global: ${progress.bestScore}/${size} (${progress.bestPercentage}%). Intentos: ${progress.attempts.length}`;
-			}
 
-			function normalizeSavedMode(savedMode) {
-				if (savedMode === "intense" || savedMode === "timer") return "intense";
-				return "practice";
-			}
+				function normalizeSavedMode(savedMode) {
+					if (savedMode === "smart") return "smart";
+					if (savedMode === "intense" || savedMode === "timer") return "intense";
+					return "practice";
+				}
 
 			function hasResumableSession(session) {
 				return Boolean(
@@ -216,11 +243,11 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				});
 			}
 
-			function buildChoiceQuestions(baseQuestions, answerPool) {
-				return baseQuestions.map((question) => {
-					const wrongCandidates = Array.from(
-						new Set(answerPool.filter((answer) => normalize(answer) !== normalize(question.answer)))
-					);
+				function buildChoiceQuestions(baseQuestions, answerPool) {
+					return baseQuestions.map((question) => {
+						const wrongCandidates = Array.from(
+							new Set(answerPool.filter((answer) => normalize(answer) !== normalize(question.answer)))
+						);
 					const wrongAnswers = shuffle(wrongCandidates).slice(0, OPTION_COUNT - 1);
 					const options = shuffle([question.answer, ...wrongAnswers]);
 					return {
@@ -228,9 +255,33 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 						answer: question.answer,
 						options,
 						correctIndex: options.findIndex((option) => option === question.answer)
-					};
-				});
-			}
+						};
+					});
+				}
+
+				function buildSmartFailedQuestions(progress) {
+					const reviews = (progress?.reviews ?? []).slice(0, SMART_REVIEW_WINDOW);
+					const used = new Set();
+					const failed = [];
+
+					reviews.forEach((review) => {
+						(review.attempts ?? []).forEach((attempt) => {
+							if (attempt.isCorrect) return;
+							const key = normalize(attempt.prompt);
+							if (used.has(key)) return;
+							const source = questionByPrompt.get(attempt.prompt);
+							failed.push(
+								source ?? {
+									prompt: attempt.prompt,
+									answer: attempt.correctAnswer
+								}
+							);
+							used.add(key);
+						});
+					});
+
+					return failed;
+				}
 
 			function escapeHtml(value) {
 				return String(value)
@@ -446,9 +497,9 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				});
 			}
 
-			function finalizeAnswer(selectedIndex) {
-				if (state.answered || state.finished) return;
-				state.answered = true;
+				function finalizeAnswer(selectedIndex) {
+					if (state.answered || state.finished) return;
+					state.answered = true;
 
 				const question = state.questions[state.currentQuestion];
 				const buttons = Array.from(choicesEl.querySelectorAll("button"));
@@ -458,10 +509,11 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 					state.score += 1;
 				}
 
-				if (state.mode === "practice") {
-					if (isCorrect) {
-						feedbackEl.textContent = "Respuesta correcta.";
-						feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-emerald-300";
+					const isPracticeLike = state.mode !== "intense";
+					if (isPracticeLike) {
+						if (isCorrect) {
+							feedbackEl.textContent = "Respuesta correcta.";
+							feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-emerald-300";
 					} else {
 						feedbackEl.textContent = `Incorrecta. Correcta: ${question.answer}`;
 						feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-rose-300";
@@ -471,18 +523,18 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 					feedbackEl.className = "mt-3 min-h-6 text-sm font-medium text-sky-300";
 				}
 
-				state.attempts[state.currentQuestion] = {
+					state.attempts[state.currentQuestion] = {
 					prompt: question.prompt,
 					selectedAnswer: question.options[selectedIndex],
 					correctAnswer: question.answer,
 					isCorrect
 				};
 
-				buttons.forEach((button, index) => {
-					button.disabled = true;
-					if (state.mode === "practice") {
-						if (index === question.correctIndex) {
-							button.className = "w-full rounded-lg border border-emerald-500 bg-emerald-500/15 px-4 py-3 text-left text-sm font-medium text-emerald-200";
+					buttons.forEach((button, index) => {
+						button.disabled = true;
+						if (isPracticeLike) {
+							if (index === question.correctIndex) {
+								button.className = "w-full rounded-lg border border-emerald-500 bg-emerald-500/15 px-4 py-3 text-left text-sm font-medium text-emerald-200";
 						} else if (index === selectedIndex) {
 							button.className = "w-full rounded-lg border border-rose-500 bg-rose-500/15 px-4 py-3 text-left text-sm font-medium text-rose-200";
 						} else {
@@ -532,13 +584,32 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 					return;
 				}
 
-				const mode = chosenMode ?? state.mode ?? "practice";
-				state.mode = mode;
-				const randomQuestions = shuffle(allQuestions).slice(0, Math.min(size, allQuestions.length));
-				state.questions = buildChoiceQuestions(randomQuestions, allQuestions.map((question) => question.answer));
-				state.currentQuestion = 0;
-				state.score = 0;
-				state.attempts = [];
+					const mode = normalizeSavedMode(chosenMode ?? state.mode ?? "practice");
+					state.mode = mode;
+					let selectedQuestions = [];
+						if (mode === "smart") {
+							const failedQuestions = buildSmartFailedQuestions(savedProgress);
+							if (failedQuestions.length === 0) {
+								void Swal.fire({
+									icon: "info",
+									title: "Sin fallos recientes",
+									text: "Completa un Big Quiz para generar errores y luego usar el repaso inteligente.",
+									confirmButtonText: "Entendido",
+									background: "#0f172a",
+									color: "#e2e8f0"
+								});
+								showModeSelector();
+								updateMeta();
+								return;
+							}
+						selectedQuestions = shuffle(failedQuestions).slice(0, Math.min(size, failedQuestions.length));
+					} else {
+						selectedQuestions = shuffle(allQuestions).slice(0, Math.min(size, allQuestions.length));
+					}
+					state.questions = buildChoiceQuestions(selectedQuestions, allAnswers);
+					state.currentQuestion = 0;
+					state.score = 0;
+					state.attempts = [];
 				state.finished = false;
 				state.justResumed = false;
 				state.startedAt = new Date().toISOString();
@@ -553,8 +624,9 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 				startExamTimer();
 			}
 
-			startPracticeBtn.addEventListener("click", () => startRound(true, "practice"));
-			startIntenseBtn.addEventListener("click", () => startRound(true, "intense"));
+				startPracticeBtn.addEventListener("click", () => startRound(true, "practice"));
+				startSmartBtn.addEventListener("click", () => startRound(true, "smart"));
+				startIntenseBtn.addEventListener("click", () => startRound(true, "intense"));
 			resumeSessionBtn.addEventListener("click", () => startRound(false));
 			clearSessionBtn.addEventListener("click", () => {
 				saveBigQuizSession(null);
@@ -573,14 +645,12 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 			showModeSelector();
 			updateMeta();
 
-			const saved = getBigQuizProgress();
-			if (hasResumableSession(saved.session)) {
-				const modeLabel = normalizeSavedMode(saved.session.mode) === "intense"
-					? "Examen intenso"
-					: "Quiz de practica";
-				resumeSessionTextEl.textContent = `Modo: ${modeLabel} | Pregunta ${saved.session.currentQuestion + 1} de ${saved.session.questions.length}`;
-				resumeSessionBtn.classList.remove("hidden");
-				clearSessionBtn.classList.remove("hidden");
+				const saved = getBigQuizProgress();
+				if (hasResumableSession(saved.session)) {
+					const modeLabel = getModeLabel(normalizeSavedMode(saved.session.mode));
+					resumeSessionTextEl.textContent = `Modo: ${modeLabel} | Pregunta ${saved.session.currentQuestion + 1} de ${saved.session.questions.length}`;
+					resumeSessionBtn.classList.remove("hidden");
+					clearSessionBtn.classList.remove("hidden");
 			}
 		</script>
 	</body>

@@ -149,6 +149,7 @@ const sectionCatalogJson = JSON.stringify(
 
 		<script id="section-catalog" type="application/json" set:html={sectionCatalogJson}></script>
 		<script>
+			import Swal from "sweetalert2";
 			import {
 				APP_STORAGE_NAME,
 				clearProgressStore,
@@ -202,9 +203,15 @@ const sectionCatalogJson = JSON.stringify(
 					.replaceAll("'", "&#039;");
 			}
 
-			function getSectionTitle(sectionId) {
-				return sectionCatalogMap.get(sectionId) ?? sectionId;
-			}
+				function getSectionTitle(sectionId) {
+					return sectionCatalogMap.get(sectionId) ?? sectionId;
+				}
+
+				function getModeLabel(mode) {
+					if (mode === "intense") return "Examen";
+					if (mode === "smart") return "Repaso";
+					return "Practica";
+				}
 
 			function splitPrompt(prompt) {
 				const matched = /^\[(.+?)\]\s*(.+)$/.exec(String(prompt));
@@ -238,15 +245,15 @@ const sectionCatalogJson = JSON.stringify(
 				return `${formatter.format(weekStartDate)} - ${formatter.format(weekEndDate)}`;
 			}
 
-			function renderBigQuizAttempts(attempts) {
+				function renderBigQuizAttempts(attempts) {
 				bigQuizAttemptsBodyEl.innerHTML = "";
 				if (!attempts || attempts.length === 0) {
 					bigQuizAttemptsBodyEl.innerHTML = '<tr><td class="py-2 text-slate-400" colspan="5">Sin intentos registrados.</td></tr>';
 					return;
 				}
 
-				attempts.forEach((attempt) => {
-					const modeLabel = attempt.mode === "intense" ? "Examen" : "Practica";
+					attempts.forEach((attempt) => {
+						const modeLabel = getModeLabel(attempt.mode);
 					const statusLabel = attempt.passed ? "Aprobado" : "No aprobado";
 					const statusClass = attempt.passed ? "text-emerald-300" : "text-rose-300";
 					const row = document.createElement("tr");
@@ -261,17 +268,17 @@ const sectionCatalogJson = JSON.stringify(
 				});
 			}
 
-			function renderBigQuizReviews(reviews) {
+				function renderBigQuizReviews(reviews) {
 				bigQuizReviewsEl.innerHTML = "";
 				if (!reviews || reviews.length === 0) {
 					bigQuizReviewsEl.innerHTML = '<p class="text-sm text-slate-400">Sin revisiones detalladas guardadas.</p>';
 					return;
 				}
 
-				reviews.forEach((review, index) => {
-					const wrapper = document.createElement("details");
-					wrapper.className = "rounded-lg border border-slate-800 bg-slate-950 p-3";
-					const modeLabel = review.mode === "intense" ? "Examen" : "Practica";
+					reviews.forEach((review, index) => {
+						const wrapper = document.createElement("details");
+						wrapper.className = "rounded-lg border border-slate-800 bg-slate-950 p-3";
+						const modeLabel = getModeLabel(review.mode);
 					const attemptsHtml = review.attempts
 						.map((attempt, attemptIndex) => {
 							const color = attempt.isCorrect ? "text-emerald-300" : "text-rose-300";
@@ -489,10 +496,29 @@ const sectionCatalogJson = JSON.stringify(
 			}
 
 			refreshBtn.addEventListener("click", render);
-			clearBtn.addEventListener("click", () => {
-				const accepted = window.confirm("¿Seguro que quieres borrar todo el historial local? Esta accion no se puede deshacer.");
-				if (!accepted) return;
+			clearBtn.addEventListener("click", async () => {
+				const response = await Swal.fire({
+					icon: "warning",
+					title: "Borrar historial local",
+					text: "Esta accion elimina el progreso guardado y no se puede deshacer.",
+					showCancelButton: true,
+					confirmButtonText: "Si, borrar",
+					cancelButtonText: "Cancelar",
+					background: "#0f172a",
+					color: "#e2e8f0"
+				});
+				if (!response.isConfirmed) return;
 				clearProgressStore();
+				await Swal.fire({
+					icon: "success",
+					title: "Historial borrado",
+					text: "El almacenamiento local se limpio correctamente.",
+					confirmButtonText: "Entendido",
+					timer: 1400,
+					showConfirmButton: false,
+					background: "#0f172a",
+					color: "#e2e8f0"
+				});
 				render();
 			});
 

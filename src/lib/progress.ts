@@ -9,7 +9,7 @@ export type AttemptSummary = {
 	total: number;
 	percentage: number;
 	passed?: boolean;
-	mode?: "practice" | "intense";
+	mode?: "practice" | "intense" | "smart";
 };
 
 export type SectionProgress = {
@@ -38,7 +38,7 @@ export type BigQuizSessionQuestion = {
 };
 
 export type BigQuizSession = {
-	mode: "practice" | "intense";
+	mode: "practice" | "intense" | "smart";
 	timeLimitSeconds: number;
 	remainingSeconds: number;
 	questions: BigQuizSessionQuestion[];
@@ -51,7 +51,7 @@ export type BigQuizSession = {
 
 export type BigQuizReview = {
 	playedAt: string;
-	mode: "practice" | "intense";
+	mode: "practice" | "intense" | "smart";
 	score: number;
 	total: number;
 	percentage: number;
@@ -251,7 +251,7 @@ export function recordBigQuizAttempt(payload: {
 	score: number;
 	total: number;
 	passed: boolean;
-	mode: "practice" | "intense";
+	mode: "practice" | "intense" | "smart";
 	attempts?: BigQuizAttemptDetail[];
 }): void {
 	const store = loadStore();
