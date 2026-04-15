@@ -14,8 +14,8 @@ export const aguaSection: QuizSection = {
 			answer: "Oscila entre el 70% y 75%."
 		},
 		{
-			prompt: "Menciona algunos factores que influyen en la humectacion de la piel.",
-			answer: "Estres, contaminacion, ayunos, emociones, poca ingesta de agua, tabaco, alcohol y temperatura."
+			prompt: "Menciona algunos factores que influyen en la variacion de la humectacion en la piel.",
+			answer: "Estres, contaminacion, ayunos, emociones, poca ingesta de agua, tabaco, alcohol y temperatura ambiental y/o corporal."
 		}
 	]
 };

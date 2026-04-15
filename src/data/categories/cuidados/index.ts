@@ -7,19 +7,19 @@ export const cuidadosSection: QuizSection = {
 	questions: [
 		{
 			prompt: "¿Cuantos son los pasos minimos del apoyo en casa y cual es su proposito?",
-			answer: "Son 3 (limpieza, locion/tonico y proteccion) para mantener y prolongar resultados."
+			answer: "Son 3 (limpieza o desmaquillado, locion o tonico y proteccion) y su proposito es mantener y prolongar el resultado del tratamiento o limpieza profesional."
 		},
 		{
-			prompt: "¿Cual es el objetivo de la limpieza facial profunda?",
-			answer: "Preparar la piel para realizar un tratamiento especifico."
+			prompt: "Procedimiento cosmetico profesional cuyo objetivo es la preparacion de la piel para poder realizar el tratamiento especifico:",
+			answer: "Limpieza facial profunda."
 		},
 		{
-			prompt: "Menciona los primeros pasos de la limpieza facial profesional.",
-			answer: "Limpieza o desmaquillado, exfoliante/peeling, locion y lisajes desincrustantes."
+			prompt: "Menciona los pasos de la limpieza facial profesional.",
+			answer: "1) Limpieza o desmaquillado. 2) Exfoliante o peeling. 3) Locion. 4) Lisajes desincrustantes. 5) Vapor o toallas calientes. 6) Extraccion. 7) Alta frecuencia. 8) Mascarilla. 9) Tonico o locion. 10) Proteccion."
 		},
 		{
-			prompt: "Menciona la secuencia completa de la limpieza facial profesional.",
-			answer: "Limpieza/desmaquillado, exfoliante, locion, lisajes desincrustantes, vapor o toallas calientes, extraccion, alta frecuencia, mascarilla, tonico y proteccion."
+			prompt: "¿Que porcentaje de los ingresos representan las ventas en la cabina o spa y que herramientas facilitan esta labor?",
+			answer: "El 60%; folleteria, muestras, manuales de lineas, aplicacion directa de productos, vitrinas, exhibidores, promociones y regalos."
 		}
 	]
 };

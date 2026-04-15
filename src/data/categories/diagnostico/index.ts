@@ -7,14 +7,14 @@ export const diagnosticoSection: QuizSection = {
 	questions: [
 		{
 			prompt: "Define diagnostico.",
-			answer: "Acto de conocer la naturaleza de una enfermedad mediante observacion de signos y sintomas."
+			answer: "Es el acto de conocer la naturaleza de una enfermedad mediante la observacion de signos y sintomas."
 		},
 		{
 			prompt: "Define protocolo.",
-			answer: "Plan escrito y detallado de una actuacion medica."
+			answer: "Es el plan escrito y detallado de una actuacion medica."
 		},
 		{
-			prompt: "¿Que equipos basicos apoyan un buen diagnostico?",
+			prompt: "Menciona los equipos basicos que ayudan a la profesional a realizar un buen diagnostico.",
 			answer: "Lupa y luz de Wood."
 		}
 	]

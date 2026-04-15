@@ -3,6 +3,7 @@ import { sections } from "./categories";
 import type { QuizQuestion, QuizSection } from "./types";
 
 export const BIG_QUIZ_SIZE = 40;
+export const SUPER_INTENSE_QUIZ_SIZE = 80;
 
 export function shuffleQuestions(questions: QuizQuestion[]): QuizQuestion[] {
 	const copy = [...questions];

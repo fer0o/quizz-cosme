@@ -1,9 +1,7 @@
 ---
 import "../styles/global.css";
 import { sections } from "../data/categories";
-import { BIG_QUIZ_SIZE } from "../data/quiz";
-
-const SUPER_INTENSE_QUIZ_SIZE = 80;
+import { BIG_QUIZ_SIZE, SUPER_INTENSE_QUIZ_SIZE } from "../data/quiz";
 
 const allQuestions = sections.flatMap((section) =>
 	section.questions.map((question) => ({
@@ -299,6 +297,31 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 						correctIndex: options.findIndex((option) => option === question.answer)
 					};
 				});
+			}
+
+			function pickQuestionsForCount(pool, desiredCount, allowRepeats = false) {
+				if (!Array.isArray(pool) || pool.length === 0 || desiredCount <= 0) return [];
+
+				if (!allowRepeats || desiredCount <= pool.length) {
+					return shuffle(pool).slice(0, Math.min(desiredCount, pool.length));
+				}
+
+				const selected = [];
+				while (selected.length < desiredCount) {
+					const round = shuffle(pool);
+					const lastPrompt = selected.at(-1)?.prompt;
+					if (lastPrompt && round.length > 1 && round[0]?.prompt === lastPrompt) {
+						const swapIndex = round.findIndex((item) => item.prompt !== lastPrompt);
+						if (swapIndex > 0) {
+							[round[0], round[swapIndex]] = [round[swapIndex], round[0]];
+						}
+					}
+
+					const remaining = desiredCount - selected.length;
+					selected.push(...round.slice(0, remaining));
+				}
+
+				return selected;
 			}
 
 			function buildSmartFailedQuestions(progress) {
@@ -652,9 +675,11 @@ const allQuestionsJson = JSON.stringify(allQuestions).replace(/</g, "\\u003c");
 						Math.min(modeConfig.questionCount, failedQuestions.length)
 					);
 				} else {
-					selectedQuestions = shuffle(allQuestions).slice(
-						0,
-						Math.min(modeConfig.questionCount, allQuestions.length)
+					const allowRepeats = mode === "super-intense";
+					selectedQuestions = pickQuestionsForCount(
+						allQuestions,
+						modeConfig.questionCount,
+						allowRepeats
 					);
 				}
 
